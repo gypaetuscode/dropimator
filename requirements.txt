@@ -1,0 +1,3 @@
+wheel
+psycopg2-binary
+SQLAlchemy

@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    restart: always
+
+  pgadmin4:
+    container_name: pgadmin4
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_LISTEN_PORT=5050
+      - PGADMIN_DEFAULT_EMAIL=user@domain.com
+      - PGADMIN_DEFAULT_PASSWORD=SuperSecret
+    ports:
+      - 5050:5050
+    restart: always
