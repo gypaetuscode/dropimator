@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine, Column, String, Double, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.engine import URL
+from sqlalchemy.dialects.postgresql import JSONB
 
 load_dotenv()
 openai.api_key = os.getenv('OPENAI_API_KEY')
@@ -43,8 +44,7 @@ def main():
         meta_description = Column(String())
         created_at = Column(DateTime, default=datetime.datetime.utcnow)
         updated_at = Column(DateTime, default=datetime.datetime.utcnow)
-
-        #! TODO: Save OPENAI response in database
+        openai_response = Column(JSONB)
 
     Base.metadata.create_all(engine)
 
@@ -88,36 +88,42 @@ def main():
     products = session.query(Product).limit(10).all()
 
     for product in products:
-        if product.description or product.meta_title or product.meta_description:
+        if product.description and product.meta_title and product.meta_description:
             continue
 
-        prompt = 'Please provide me with a JSON value containing information about a product with the following specificaitions:\n{\n"manufacturer_name":' + f""""{product.manufacturer_name}",\n"name": "{product.name}",\n"flavour": "{product.flavour}"\n""" + """}.
-The JSON value should include the following properties: "description", "meta_title", "meta_description".
-Please format the response as a valid JSON object with the values translated in Romanian, no other comments.
-Example of a valid response:
-{
-    "description": "...",
-    "meta_title": "...",
-    "meta_description": "..."
-}
-"""
+        prompt = """Generate product details using Romanian language and respecting the given JSON structure {"html_description":<string min 300 tokens max 400 tokens>, "meta_title":  <string no more than 25 tokens length>, "meta_description": <string no more than 55 tokens length>}. 
+Product details input:
+""" + f""""{product.manufacturer_name}",\n"name": "{product.name}",\n"flavour": "{product.flavour}"\n""" + """
+Output:"""
+        print('Prompt', prompt)
 
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
+                {"role": "system",
+                    "content": "You are a fitness nutrition marketing specialist."},
                 {
                     "role": "user",
                     "content": prompt
                 }
-            ]
+            ],
+            temperature=0.7,
+            frequency_penalty=0.5,
+            max_tokens=750
+
         )
+
+        product.openai_response = response
 
         response_content = response['choices'][0]['message']['content'].strip()
         response_as_json = json.loads(response_content)
 
-        product.description = response_as_json.get('description', '')
-        product.meta_title = response_as_json.get('meta_title', '')
-        product.meta_description = response_as_json.get('meta_description', '')
+        product.description = response_as_json.get(
+            'html_description', response_as_json.get('descriere', ''))
+        product.meta_title = response_as_json.get(
+            'meta_title', response_as_json.get('meta_titlu', ''))
+        product.meta_description = response_as_json.get(
+            'meta_description', response_as_json.get('meta_descriere', ''))
         product.updated_at = datetime.datetime.utcnow()
 
         session.commit()
