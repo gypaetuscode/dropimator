@@ -1,0 +1,11 @@
+{
+  "require": {
+    "prestashop/prestashop-webservice-lib": "dev-master",
+    "vlucas/phpdotenv": "^5.5"
+  },
+  "autoload": {
+    "files": [
+      "vendor/prestashop/prestashop-webservice-lib/PSWebServiceLibrary.php"
+    ]
+  }
+}
