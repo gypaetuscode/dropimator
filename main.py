@@ -85,7 +85,7 @@ def main():
             session.add(new_product)
             session.commit()
 
-    products = session.query(Product).limit(10).all()
+    products = session.query(Product).limit(20).all()
 
     for product in products:
         if product.description and product.meta_title and product.meta_description:

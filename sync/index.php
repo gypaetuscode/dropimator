@@ -48,8 +48,10 @@ foreach ($rows as $row) {
     // Upsert product
     $sku = $row['sku'];
     $name = $row['name'];
+    $qty = intval($row['qty'], 10);
+    $flavour = trim($row['flavour']);
     $weight = $row['weight'];
-    $retailPrice = $row['retail_price'];
+    $retailPrice = floatval($row['retail_price']) * 4.96;
     $description = $row['description'];
     $metaTitle = $row['meta_title'];
     $metaDescription = $row['meta_description'];
@@ -85,5 +87,28 @@ foreach ($rows as $row) {
         addImageToProduct($imgUrl, $productId);
     }
 
-    break;
+    if (empty($flavour)) {
+        updateQuantityWithoutCombination($productId, $qty);
+        continue;
+    }
+
+    $productFlavourOptionId = getProductOptionByName('Aroma');
+    $productWeightOptionId = getProductOptionByName('Greutate');
+
+    $weightToStr = floatval($weight) . " KG";
+
+    $productFlavourValueOptionId = getProductOptionValueByName($flavour);
+
+    if (!$productFlavourValueOptionId) {
+        $productFlavourValueOptionId = addProductOptionValue($productFlavourOptionId, $flavour);
+    }
+
+    $productWeightValueOptionId = getProductOptionValueByName($weightToStr);
+
+    if (!$productWeightValueOptionId) {
+        $productWeightValueOptionId = addProductOptionValue($productWeightOptionId, $weightToStr);
+    }
+
+    $combinationId = addCombination($productId, $productFlavourValueOptionId, $productWeightValueOptionId, $qty, $retailPrice);
+    updateQuantityWithCombination($productId, $combinationId, $qty);
 };
