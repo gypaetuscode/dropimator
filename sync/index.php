@@ -71,7 +71,6 @@ foreach ($rows as $row) {
         $sku,
         $manufacturerId,
         $name,
-        $weight,
         $retailPrice,
         $description,
         $metaTitle,
@@ -95,18 +94,16 @@ foreach ($rows as $row) {
     $productFlavourOptionId = getProductOptionByName('Aroma');
     $productWeightOptionId = getProductOptionByName('Greutate');
 
-    $weightToStr = floatval($weight) . " KG";
-
     $productFlavourValueOptionId = getProductOptionValueByName($flavour);
 
     if (!$productFlavourValueOptionId) {
         $productFlavourValueOptionId = addProductOptionValue($productFlavourOptionId, $flavour);
     }
 
-    $productWeightValueOptionId = getProductOptionValueByName($weightToStr);
+    $productWeightValueOptionId = getProductOptionValueByName($weight);
 
     if (!$productWeightValueOptionId) {
-        $productWeightValueOptionId = addProductOptionValue($productWeightOptionId, $weightToStr);
+        $productWeightValueOptionId = addProductOptionValue($productWeightOptionId, $weight);
     }
 
     $combinationId = addCombination($productId, $productFlavourValueOptionId, $productWeightValueOptionId, $qty, $retailPrice);

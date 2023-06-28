@@ -36,7 +36,7 @@ def main():
         name = Column(String())
         qty = Column(String())
         flavour = Column(String())
-        weight = Column(Double())
+        weight = Column(String())
         img_url = Column(String())
         retail_price = Column(Double())
         description = Column(String())
@@ -62,7 +62,6 @@ def main():
             name = row['name']
             qty = row['qty']
             flavour = row['flavour']
-            weight = row['weight']
             img_url = row['img_url']
             retail_price = row['retail_price']
 
@@ -77,7 +76,6 @@ def main():
                 name=name,
                 qty=qty,
                 flavour=flavour,
-                weight=weight,
                 img_url=img_url,
                 retail_price=retail_price
             )
@@ -91,7 +89,7 @@ def main():
         if product.description and product.meta_title and product.meta_description:
             continue
 
-        prompt = """Generate product details using Romanian language and respecting the given JSON structure {"html_description":<string min 300 tokens max 400 tokens>, "meta_title":  <string no more than 25 tokens length>, "meta_description": <string no more than 55 tokens length>}. 
+        prompt = """Generate product details using Romanian language and respecting the given JSON structure {"html_description":<formatted string min 600 tokens max 900 tokens>, "meta_title":  <string no more than 25 tokens length>, "meta_description": <string no more than 55 tokens length>, "weight": "<string>"}. 
 Product details input:
 """ + f""""{product.manufacturer_name}",\n"name": "{product.name}",\n"flavour": "{product.flavour}"\n""" + """
 Output:"""
@@ -124,6 +122,7 @@ Output:"""
             'meta_title', response_as_json.get('meta_titlu', ''))
         product.meta_description = response_as_json.get(
             'meta_description', response_as_json.get('meta_descriere', ''))
+        product.weight = response_as_json.get('weight', '')
         product.updated_at = datetime.datetime.utcnow()
 
         session.commit()

@@ -69,7 +69,6 @@ function addProduct(
     $reference,
     $manufacturerId,
     $name,
-    $weight,
     $retail_price,
     $description,
     $meta_tile,
@@ -81,7 +80,7 @@ function addProduct(
     $blankXml->product->reference = $reference;
     $blankXml->product->id_manufacturer = $manufacturerId;
     $blankXml->product->name = $name;
-    $blankXml->product->weight = $weight;
+    // $blankXml->product->weight = $weight;
     $blankXml->product->price = $retail_price;
     $blankXml->product->description = $description;
     $blankXml->product->meta_title = $meta_tile;
@@ -92,6 +91,7 @@ function addProduct(
     $blankXml->product->state = 1;
     $blankXml->product->id_category_default = 2;
     $blankXml->product->redirect_type = '301-category';
+    $blankXml->product->available_for_order = 1;
 
     $categoryOpt = [
         'url' => $STORE_URL . "/api/categories/2"
