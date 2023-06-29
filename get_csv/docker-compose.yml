@@ -1,0 +1,10 @@
+version: "3.8"
+
+services:
+  selenium-standalone-chrome:
+    container_name: selenium-standalone-chrome
+    image: selenium/standalone-chrome:latest
+    ports:
+      - "4444:4444"
+      - "7900:7900"
+    restart: always
