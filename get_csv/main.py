@@ -15,6 +15,7 @@ PASSWORD = os.getenv('PASSWORD')
 
 def main():
     options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
 
     driver = webdriver.Chrome(options=options)
     driver.maximize_window()
