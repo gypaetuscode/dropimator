@@ -32,7 +32,7 @@ try {
     echo 'Connection failed: ' . $ex->getMessage() . "\n";
 }
 
-$productsStmt = $pdo->query('SELECT * FROM public.products ORDER BY updated_at DESC');
+$productsStmt = $pdo->query('SELECT * FROM public.products ORDER BY updated_at DESC LIMIT 100');
 $rows = $productsStmt->fetchAll(PDO::FETCH_ASSOC);
 
 foreach ($rows as $row) {
@@ -63,7 +63,14 @@ foreach ($rows as $row) {
     $productId = getProductByReference($sku);
 
     if ($productId) {
-        //! Update product
+        $combinationId = getCombinationByProductId($productId);
+
+        if ($combinationId) {
+            updateQuantityWithCombination($productId, $combinationId, $qty);
+            continue;
+        }
+
+        updateQuantityWithoutCombination($productId, $qty);
         continue;
     }
 

@@ -264,7 +264,6 @@ function updateQuantityWithoutCombination($productId, $qty)
     $getStockAvailableResult = $webService->get($getStockAvailableOpt);
 
     $getStockAvailableResult->stock_available->quantity = $qty;
-    $getStockAvailableResult->stock_available->out_of_stock = 0;
 
     $putOpt = [
         "resource" => "stock_availables",
@@ -296,20 +295,16 @@ function updateQuantityWithCombination($productId, $combinationId, $qty)
     ];
 
     $stockAvailableResult = $webService->get($stockAvailableOpt);
-    echo 'Stock available result ' . $stockAvailableResult->asXML() . "\n\n";
 
     $stockAvailableId = $stockAvailableResult->stock_availables->stock_available->id;
-    echo 'Stock available id ' . $stockAvailableId . "\n\n";
 
     $stockAvailableDataOpt = [
         'url' => $STORE_URL . "/api/stock_availables/$stockAvailableId"
     ];
 
     $stockAvailableDataResult = $webService->get($stockAvailableDataOpt);
-    echo 'Stock available data result before ' . $stockAvailableDataResult->asXML() . "\n\n";
 
     $stockAvailableDataResult->stock_available->quantity = $qty;
-    echo 'Stock available data result after ' . $stockAvailableDataResult->asXML() . "\n\n";
 
     $stockAvailableDataUpdateOpt = [
         'resource' => 'stock_availables',
@@ -317,13 +312,19 @@ function updateQuantityWithCombination($productId, $combinationId, $qty)
         'putXml' => $stockAvailableDataResult->asXML()
     ];
 
-    $stockAvailableDataUpdateResult = $webService->edit($stockAvailableDataUpdateOpt);
-    echo 'Stock available data update result ' . $stockAvailableDataUpdateResult->asXML() . "\n\n";
+    $webService->edit($stockAvailableDataUpdateOpt);
+}
 
-    $productDetailsOpt = [
-        "url" => $STORE_URL . "/api/products/$productId"
+function getCombinationByProductId($productId)
+{
+    global $webService;
+
+    $opt = [
+        'resource' => 'combinations',
+        'filter[id_product]' => $productId
     ];
 
-    $productDetailsResult = $webService->get($productDetailsOpt);
-    echo 'Product details before' . $productDetailsResult->asXML() . "\n\n";
+    $result = $webService->get($opt);
+
+    return $result->combinations->combination['id'];
 }

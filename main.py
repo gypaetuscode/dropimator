@@ -68,6 +68,8 @@ def main():
             product = session.get(Product, sku)
 
             if product:
+                product.qty = qty
+                session.commit()
                 continue
 
             new_product = Product(
@@ -83,7 +85,7 @@ def main():
             session.add(new_product)
             session.commit()
 
-    products = session.query(Product).limit(20).all()
+    products = session.query(Product).limit(100).all()
 
     for product in products:
         if product.description and product.meta_title and product.meta_description:
