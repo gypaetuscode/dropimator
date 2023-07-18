@@ -5,7 +5,7 @@ import csv
 import openai
 import datetime
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, Column, String, Double, DateTime
+from sqlalchemy import create_engine, Column, String, Double, DateTime, Integer
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.engine import URL
 from sqlalchemy.dialects.postgresql import JSONB
@@ -45,6 +45,7 @@ def main():
         created_at = Column(DateTime, default=datetime.datetime.utcnow)
         updated_at = Column(DateTime, default=datetime.datetime.utcnow)
         openai_response = Column(JSONB)
+        total_tokens = Column(Integer)
 
     Base.metadata.create_all(engine)
 
@@ -85,7 +86,7 @@ def main():
             session.add(new_product)
             session.commit()
 
-    products = session.query(Product).limit(100).all()
+    products = session.query(Product).limit(1000).all()
 
     for product in products:
         if product.description and product.meta_title and product.meta_description:
@@ -114,6 +115,7 @@ Output:"""
         )
 
         product.openai_response = response
+        product.total_tokens = response['usage']['total_tokens']
 
         response_content = response['choices'][0]['message']['content'].strip()
         response_as_json = json.loads(response_content)

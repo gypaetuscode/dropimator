@@ -32,7 +32,7 @@ try {
     echo 'Connection failed: ' . $ex->getMessage() . "\n";
 }
 
-$productsStmt = $pdo->query('SELECT * FROM public.products ORDER BY updated_at DESC LIMIT 100');
+$productsStmt = $pdo->query('SELECT * FROM public.products');
 $rows = $productsStmt->fetchAll(PDO::FETCH_ASSOC);
 
 foreach ($rows as $row) {

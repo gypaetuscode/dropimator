@@ -15,10 +15,10 @@ if [ -z "$(find . -maxdepth 1 -type f -name '*.csv')" ]; then
  exit 1
 fi
 
-mv *.csv ../;
+mv *.csv /home/dev/projects/power_store;
 
 deactivate;
-cd ../;
+cd /home/dev/projects/power_store;
 
 source venv/bin/activate;
 python3 main.py;
