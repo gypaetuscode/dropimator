@@ -14,6 +14,43 @@ load_dotenv()
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 
+def generate_product_category(product, session):
+    if product.category:
+        return
+
+    prompt = '''Generate product category respecting the given JSON structure {"category": <one of the value of [Proteine, Aminoacizi, Vitamine si Minerale, Batoane si Gustari Fitness, Suplimente pentru slabit, Performanta/Stimulatoare, Pre-Workout, Creatina, Imbracaminte si acesorii pentru sala, Masa musculara]>}
+Product input: 
+Manufacturer: ''' + product.manufacturer_name + '''
+Name: ''' + product.name + '''
+Flavour: ''' + product.flavour
+
+    print('Prompt', prompt)
+
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system",
+             "content": "You are a fitness nutrition marketing specialist."},
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        temperature=0.7,
+        frequency_penalty=0.5,
+        max_tokens=750
+    )
+
+    product.openai_response = response
+    product.total_tokens = response['usage']['total_tokens']
+
+    response_content = response['choices'][0]['message']['content'].strip()
+    response_as_json = json.loads(response_content)
+
+    product.category = response_as_json.get('category', '')
+    session.commit()
+
+
 def main():
     url = URL.create(
         drivername='postgresql',
@@ -46,6 +83,7 @@ def main():
         updated_at = Column(DateTime, default=datetime.datetime.utcnow)
         openai_response = Column(JSONB)
         total_tokens = Column(Integer)
+        category = Column(String())
 
     Base.metadata.create_all(engine)
 
@@ -67,6 +105,7 @@ def main():
             retail_price = row['retail_price']
 
             product = session.get(Product, sku)
+            generate_product_category(product, session)
 
             if product:
                 product.qty = qty
@@ -86,7 +125,7 @@ def main():
             session.add(new_product)
             session.commit()
 
-    products = session.query(Product).limit(1000).all()
+    products = session.query(Product).all()
 
     for product in products:
         if product.description and product.meta_title and product.meta_description:

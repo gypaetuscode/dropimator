@@ -89,18 +89,18 @@ function addProduct(
     $blankXml->product->show_price = 1;
     $blankXml->product->active = 1;
     $blankXml->product->state = 1;
-    $blankXml->product->id_category_default = 2;
+    $blankXml->product->id_category_default = 35;
     $blankXml->product->redirect_type = '301-category';
     $blankXml->product->available_for_order = 1;
 
     $categoryOpt = [
-        'url' => $STORE_URL . "/api/categories/2"
+        'url' => $STORE_URL . "/api/categories/35"
     ];
     $categoryResult = $webService->get($categoryOpt);
     $positionInCategory = count($categoryResult->category->associations->products->product) - 1;
 
     $blankXml->product->position_in_category = $positionInCategory;
-    $blankXml->product->associations->categories->addChild('category')->addChild('id', 2);
+    $blankXml->product->associations->categories->addChild('category')->addChild('id', 35);
 
     $link = strtolower($name);
     $link = preg_replace("/[^a-z0-9]+/", "-", $name);

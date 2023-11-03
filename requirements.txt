@@ -3,3 +3,9 @@ psycopg2-binary
 SQLAlchemy
 python-dotenv
 openai
+pandas
+tiktoken
+matplotlib
+plotly
+scipy
+scikit-learn
