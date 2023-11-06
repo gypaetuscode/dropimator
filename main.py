@@ -14,41 +14,49 @@ load_dotenv()
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 
-def generate_product_category(product, session):
+def generate_product_category(product):
     if product.category:
-        return
+        print('Product already has a category', product.category)
+        return product.category
 
-    prompt = '''Generate product category respecting the given JSON structure {"category": <one of the value of [Proteine, Aminoacizi, Vitamine si Minerale, Batoane si Gustari Fitness, Suplimente pentru slabit, Performanta/Stimulatoare, Pre-Workout, Creatina, Imbracaminte si acesorii pentru sala, Masa musculara]>}
+    prompt = '''Strictly generate product category as an JSON respecting the given JSON structure {"category": <one of the value of [Proteine, Aminoacizi, Vitamine si Minerale, Batoane si Gustari Fitness, Suplimente pentru slabit, Performanta/Stimulatoare, Pre-Workout, Creatina, Imbracaminte si acesorii pentru sala, Masa musculara, Suplimente, Probiotice]>}
 Product input: 
 Manufacturer: ''' + product.manufacturer_name + '''
-Name: ''' + product.name + '''
-Flavour: ''' + product.flavour
-
+Name: ''' + product.name
     print('Prompt', prompt)
 
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system",
-             "content": "You are a fitness nutrition marketing specialist."},
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        temperature=0.7,
-        frequency_penalty=0.5,
-        max_tokens=750
-    )
+    response = None
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system",
+                 "content": "You are a fitness nutrition marketing specialist."},
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            temperature=0.2,
+            frequency_penalty=0.5,
+            max_tokens=200,
+            request_timeout=5,
+        )
+    except Exception as e:
+        print('Error generating product category', e)
+        return None
+
+    print('Response', response)
 
     product.openai_response = response
     product.total_tokens = response['usage']['total_tokens']
 
-    response_content = response['choices'][0]['message']['content'].strip()
-    response_as_json = json.loads(response_content)
+    response_content = response['choices'][0]['message']['content']
+    print('Response content', response_content)
 
-    product.category = response_as_json.get('category', '')
-    session.commit()
+    response_as_json = json.loads(response_content)
+    return response_as_json.get('category', '')
 
 
 def main():
@@ -105,10 +113,10 @@ def main():
             retail_price = row['retail_price']
 
             product = session.get(Product, sku)
-            generate_product_category(product, session)
 
             if product:
                 product.qty = qty
+                product.category = generate_product_category(product)
                 session.commit()
                 continue
 
@@ -119,9 +127,10 @@ def main():
                 qty=qty,
                 flavour=flavour,
                 img_url=img_url,
-                retail_price=retail_price
+                retail_price=retail_price,
             )
 
+            new_product.category = generate_product_category(new_product)
             session.add(new_product)
             session.commit()
 
@@ -137,26 +146,35 @@ Product details input:
 Output:"""
         print('Prompt', prompt)
 
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system",
-                    "content": "You are a fitness nutrition marketing specialist."},
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            temperature=0.7,
-            frequency_penalty=0.5,
-            max_tokens=750
+        response = None
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system",
+                        "content": "You are a fitness nutrition marketing specialist."},
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.7,
+                frequency_penalty=0.5,
+                max_tokens=750,
+                request_timeout=15,
+            )
+        except Exception as e:
+            print('Error generating product details', e)
+            continue
 
-        )
+        print('Response', response)
 
         product.openai_response = response
         product.total_tokens = response['usage']['total_tokens']
 
         response_content = response['choices'][0]['message']['content'].strip()
+        print('Response content', response_content)
+
         response_as_json = json.loads(response_content)
 
         product.description = response_as_json.get(
