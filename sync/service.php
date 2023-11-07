@@ -3,7 +3,7 @@
 $STORE_URL = $_ENV['STORE_URL'];
 $WEBSERVICE_KEY = $_ENV['WEBSERVICE_KEY'];
 
-$webService = new PrestaShopWebservice($STORE_URL, $WEBSERVICE_KEY, false);
+$webService = new PrestaShopWebservice($STORE_URL, $WEBSERVICE_KEY, true);
 
 function getBlankSchema($resource)
 {
@@ -65,6 +65,20 @@ function getProductByReference($reference)
     return $result->products->product['id'];
 };
 
+function getCategoryByName($categoryName)
+{
+    global $webService;
+
+    $opt = [
+        'resource' => 'categories',
+        'filter[name]' => "[$categoryName]"
+    ];
+
+    $result = $webService->get($opt);
+
+    return $result->categories->category['id'];
+}
+
 function addProduct(
     $reference,
     $manufacturerId,
@@ -72,7 +86,8 @@ function addProduct(
     $retail_price,
     $description,
     $meta_tile,
-    $meta_description
+    $meta_description,
+    $categoryId
 ) {
     global $webService, $STORE_URL;
 
@@ -89,18 +104,22 @@ function addProduct(
     $blankXml->product->show_price = 1;
     $blankXml->product->active = 1;
     $blankXml->product->state = 1;
-    $blankXml->product->id_category_default = 35;
+    $blankXml->product->id_category_default = $categoryId;
     $blankXml->product->redirect_type = '301-category';
     $blankXml->product->available_for_order = 1;
 
     $categoryOpt = [
-        'url' => $STORE_URL . "/api/categories/35"
+        'url' => $STORE_URL . "/api/categories/$categoryId"
     ];
     $categoryResult = $webService->get($categoryOpt);
-    $positionInCategory = count($categoryResult->category->associations->products->product) - 1;
+
+
+    $positionInCategory = count($categoryResult->category->associations->products->product) === 0
+        ? 0
+        : count($categoryResult->category->associations->products->product) - 1;
 
     $blankXml->product->position_in_category = $positionInCategory;
-    $blankXml->product->associations->categories->addChild('category')->addChild('id', 35);
+    $blankXml->product->associations->categories->addChild('category')->addChild('id', $categoryId);
 
     $link = strtolower($name);
     $link = preg_replace("/[^a-z0-9]+/", "-", $name);

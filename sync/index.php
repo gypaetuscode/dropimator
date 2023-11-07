@@ -56,8 +56,9 @@ foreach ($rows as $row) {
         $description = $row['description'];
         $metaTitle = $row['meta_title'];
         $metaDescription = $row['meta_description'];
+        $category = $row['category'];
 
-        if (!$description || !$metaTitle || !$metaDescription) {
+        if (!$description || !$metaTitle || !$metaDescription || !$category) {
             continue;
         };
 
@@ -75,6 +76,10 @@ foreach ($rows as $row) {
             continue;
         }
 
+        echo '------------------THIS IS THE CATEGORY NAME--------------' . $category . "\n";
+        $categoryId = getCategoryByName($category);
+        echo '------------------THIS IS THE CATEGORY ID--------------' . $categoryId . "\n";
+
         $productId = addProduct(
             $sku,
             $manufacturerId,
@@ -82,7 +87,8 @@ foreach ($rows as $row) {
             $retailPrice,
             $description,
             $metaTitle,
-            $metaDescription
+            $metaDescription,
+            $categoryId
         );
 
         // Upsert image
