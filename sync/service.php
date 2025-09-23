@@ -5,6 +5,30 @@ $WEBSERVICE_KEY = $_ENV['WEBSERVICE_KEY'];
 
 $webService = new PrestaShopWebservice($STORE_URL, $WEBSERVICE_KEY, true);
 
+/**
+ * Extract the first available identifier from a SimpleXMLElement list.
+ *
+ * @param SimpleXMLElement|null $element
+ */
+function extractFirstId(?SimpleXMLElement $element): ?int
+{
+    if ($element === null) {
+        return null;
+    }
+
+    if (isset($element['id']) && (string) $element['id'] !== '') {
+        return (int) $element['id'];
+    }
+
+    foreach ($element as $child) {
+        if (isset($child['id']) && (string) $child['id'] !== '') {
+            return (int) $child['id'];
+        }
+    }
+
+    return null;
+}
+
 function getBlankSchema($resource)
 {
     global $webService, $STORE_URL;
@@ -29,7 +53,11 @@ function getManufacturerByName($manufacturerName)
 
     $result = $webService->get($opt);
 
-    return $result->manufacturers->manufacturer['id'];
+    if (!isset($result->manufacturers)) {
+        return null;
+    }
+
+    return extractFirstId($result->manufacturers->manufacturer ?? null);
 };
 
 function addManufacturer($manufacturerName)
@@ -62,7 +90,11 @@ function getProductByReference($reference)
 
     $result = $webService->get($opt);
 
-    return $result->products->product['id'];
+    if (!isset($result->products)) {
+        return null;
+    }
+
+    return extractFirstId($result->products->product ?? null);
 };
 
 function getCategoryByName($categoryName)
@@ -76,7 +108,11 @@ function getCategoryByName($categoryName)
 
     $result = $webService->get($opt);
 
-    return $result->categories->category['id'];
+    if (!isset($result->categories)) {
+        return null;
+    }
+
+    return extractFirstId($result->categories->category ?? null);
 }
 
 function addProduct(
@@ -147,7 +183,11 @@ function getImageByProductId($productId)
 
     try {
         $result = $webService->get($opt);
-        return $result->image->declination['id'];
+        if (!isset($result->image)) {
+            return null;
+        }
+
+        return extractFirstId($result->image->declination ?? null);
     } catch (Exception $ex) {
         return null;
     }
@@ -216,7 +256,11 @@ function getProductOptionByName($name)
 
     $result = $webService->get($opt);
 
-    return $result->product_options->product_option['id'];
+    if (!isset($result->product_options)) {
+        return null;
+    }
+
+    return extractFirstId($result->product_options->product_option ?? null);
 }
 
 function getProductOptionValueByName($name)
@@ -230,7 +274,11 @@ function getProductOptionValueByName($name)
 
     $result = $webService->get($opt);
 
-    return $result->product_option_values->product_option_value['id'];
+    if (!isset($result->product_option_values)) {
+        return null;
+    }
+
+    return extractFirstId($result->product_option_values->product_option_value ?? null);
 }
 
 function addProductOptionValue($productOptionId, $flavour)
@@ -262,19 +310,22 @@ function getStockAvailableId($productId)
 
     $result = $webService->get($opt);
 
-    return $result->stock_availables->stock_available->id;
+    if (!isset($result->stock_availables)) {
+        return null;
+    }
+
+    return extractFirstId($result->stock_availables->stock_available ?? null);
 }
 
 function updateQuantityWithoutCombination($productId, $qty)
 {
     global $webService, $STORE_URL;
 
-    $getStockAvailableIdOpt = [
-        'url' => $STORE_URL . "/api/stock_availables?display=[id]&filter[id_product]=[$productId]"
-    ];
+    $stockAvailableId = getStockAvailableId($productId);
 
-    $getStockAvailableIdResult = $webService->get($getStockAvailableIdOpt);
-    $stockAvailableId = $getStockAvailableIdResult->stock_availables->stock_available->id;
+    if ($stockAvailableId === null) {
+        throw new RuntimeException('Unable to locate stock for product ' . $productId);
+    }
 
     $getStockAvailableOpt = [
         'url' => $STORE_URL . "/api/stock_availables/$stockAvailableId"
@@ -315,7 +366,15 @@ function updateQuantityWithCombination($productId, $combinationId, $qty)
 
     $stockAvailableResult = $webService->get($stockAvailableOpt);
 
-    $stockAvailableId = $stockAvailableResult->stock_availables->stock_available->id;
+    if (!isset($stockAvailableResult->stock_availables)) {
+        throw new RuntimeException('Unable to locate stock for product ' . $productId . ' combination ' . $combinationId);
+    }
+
+    $stockAvailableId = extractFirstId($stockAvailableResult->stock_availables->stock_available ?? null);
+
+    if ($stockAvailableId === null) {
+        throw new RuntimeException('Unable to locate stock id for product ' . $productId . ' combination ' . $combinationId);
+    }
 
     $stockAvailableDataOpt = [
         'url' => $STORE_URL . "/api/stock_availables/$stockAvailableId"
@@ -345,5 +404,9 @@ function getCombinationByProductId($productId)
 
     $result = $webService->get($opt);
 
-    return $result->combinations->combination['id'];
+    if (!isset($result->combinations)) {
+        return null;
+    }
+
+    return extractFirstId($result->combinations->combination ?? null);
 }
