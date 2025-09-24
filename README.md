@@ -10,8 +10,9 @@ The pipeline is composed of three main stages:
 
 1. **CSV acquisition (`get_csv/`)** &mdash; a Selenium automation signs into the supplier portal defined by environment variables and
    downloads the newest CSV file.
-2. **Product import and enrichment (`main.py`)** &mdash; the Python importer loads the CSV into PostgreSQL, requests GPT-generated
-   category assignments plus marketing copy, and persists the responses alongside the raw product fields.
+2. **Product import and enrichment (`main.py` + `dropimator/`)** &mdash; the CLI entry point orchestrates the reusable importer
+   package to load the CSV into PostgreSQL, request GPT-generated category assignments plus marketing copy, and persist the
+   responses alongside the raw product fields.
 3. **Store synchronisation (`sync/`)** &mdash; a PHP CLI app reads the enriched products, multiplies prices, ensures taxonomy and
    attribute options exist, and pushes product data (including images and combinations) to PrestaShop using its web service.
 
@@ -23,7 +24,14 @@ launch the PHP sync.
 ```
 .
 ├── docker-compose.yml          # Local PostgreSQL + pgAdmin services
-├── main.py                     # CSV importer, OpenAI enrichment, PostgreSQL persistence
+├── dropimator/                 # Python package powering the importer (configuration, services, OpenAI helpers)
+│   ├── __init__.py             # Public package interface used by main.py
+│   ├── config.py               # Logging/OpenAI/database configuration helpers
+│   ├── csv_utils.py            # CSV discovery + streaming helpers
+│   ├── models.py               # SQLAlchemy metadata and Product model
+│   ├── openai_client.py        # Prompt builders and ChatCompletion utilities
+│   └── product_service.py      # Domain logic for imports and enrichment
+├── main.py                     # Thin CLI wrapper that wires the importer together
 ├── requirements.txt            # Python dependencies for the importer and notebooks
 ├── run.sh                      # Legacy orchestration script (uses historical deployment paths)
 ├── get_csv/
