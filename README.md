@@ -37,11 +37,10 @@ launch the PHP sync.
 ├── get_csv/
 │   ├── docker-compose.yml      # Selenium Chrome container for the CSV downloader
 │   └── main.py                 # Headless Chrome automation for retrieving the supplier CSV
-├── sync/
-│   ├── composer.json           # PHP dependencies (PrestaShop web service client, dotenv)
-│   ├── index.php               # Entry point that pulls products from PostgreSQL and syncs them to PrestaShop
-│   └── service.php             # Helper functions for interacting with the PrestaShop API
-└── get_product_*.ipynb         # Exploratory notebooks for embeddings and category experiments
+└── sync/
+    ├── composer.json           # PHP dependencies (PrestaShop web service client, dotenv)
+    ├── index.php               # Entry point that pulls products from PostgreSQL and syncs them to PrestaShop
+    └── service.php             # Helper functions for interacting with the PrestaShop API
 ```
 
 ## Prerequisites
@@ -134,8 +133,6 @@ WEBSERVICE_KEY=XXXXXXXXXXXXXXXXXXXX
 - The Selenium downloader targets specific XPaths in the supplier portal; adjust them if the UI changes.
 - `run.sh` is preserved for reference but still points to the historical deployment path `/home/dev/projects/power_store`.
   Update it before reusing the automation verbatim.
-- The exploratory notebooks (`get_product_category.ipynb`, `get_product_embeddings.ipynb`) demonstrate alternative enrichment
-  workflows; they rely on the same environment variables as `main.py`.
 
 ## Troubleshooting
 
